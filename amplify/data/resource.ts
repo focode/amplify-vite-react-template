@@ -6,13 +6,52 @@ adding a new "isDone" field as a boolean. The authorization rule below
 specifies that any user authenticated via an API key can "create", "read",
 "update", and "delete" any "Todo" records.
 =========================================================================*/
+
 const schema = a.schema({
-  Todo: a
-    .model({
-      content: a.string(),
-    })
-    .authorization((allow) => [allow.publicApiKey()]),
-});
+  User: a.model({
+    name: a.string().required(), // Name of the User
+    email: a.string().required(), // Email of the User
+    // Create a hasMany relationship with quizzes
+    quizzes: a.hasMany("Quiz", "userId"),
+  }),
+
+  Quiz: a.model({
+    title: a.string().required(), // Title of the Quiz
+    userId: a.id(), // Reference field for User
+    // Create a hasMany relationship with questions
+    questions: a.hasMany("Question", "quizId"),
+    // Create a belongsTo relationship with User
+    user: a.belongsTo("User", "userId"),
+  }),
+
+  Question: a.model({
+    text: a.string().required(), // Question text
+    quizId: a.id(), // Reference field for Quiz
+    // Create a hasOne relationship with Option
+    option: a.hasOne("Option", "questionId"),
+    // Create a belongsTo relationship with Quiz
+    quiz: a.belongsTo("Quiz", "quizId"),
+  }),
+
+  Option: a.model({
+    questionId: a.id(), // Reference field for Question
+    // Create a hasMany relationship with answers
+    answers: a.hasMany("Answer", "optionId"),
+    // Create a belongsTo relationship with Question
+    question: a.belongsTo("Question", "questionId"),
+  }),
+
+  Answer: a.model({
+    text: a.string().required(), // Answer text
+    isCorrect: a.boolean().required(), // Whether the answer is correct
+    optionId: a.id(), // Reference field for Option
+    // Create a belongsTo relationship with Option
+    option: a.belongsTo("Option", "optionId"),
+  }),
+}).authorization((allow) => allow.publicApiKey()); // Enables public API key authorization
+
+export default schema;
+
 
 export type Schema = ClientSchema<typeof schema>;
 
